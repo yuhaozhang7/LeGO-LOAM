@@ -39,12 +39,14 @@ link_directories(
 add_library(${PROJECT_NAME} SHARED
 ./include/cloud_info.h 
 ./include/imageProjection.h 
+./include/featureAssociation.h
 ./include/utility.h 
-./src/imageProjection.cpp)
+./src/imageProjection.cpp
+./src/featureAssociation.cpp)
 
 add_executable(run ./src/legoloam.cpp)
 target_link_libraries(run
-    ${PROJECT_NAME}
+	${PROJECT_NAME}
     ${PCL_LIBRARIES}
     ${OpenCV_LIBRARIES}
     ${GTSAM_LIBRARIES})

@@ -32,7 +32,7 @@
 //   T. Shan and B. Englot. LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain
 //      IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS). October 2018.
 
-#include "utility.h"
+// #include "utility.h"
 #include "imageProjection.h"
 
 namespace lego_loam {
@@ -64,6 +64,18 @@ namespace lego_loam {
 
         fullCloud->points.resize(N_SCAN*Horizon_SCAN);
         fullInfoCloud->points.resize(N_SCAN*Horizon_SCAN);
+
+        laserCloudInMetadata.cloud = laserCloudIn;
+        laserCloudInMetadata.timestamp = 0.0;
+        laserCloudInMetadata.frame_id = "";
+
+        segmentedCloudMetadata.cloud = segmentedCloud;
+        segmentedCloudMetadata.timestamp = 0.0;
+        segmentedCloudMetadata.frame_id = "";
+
+        outlierCloudMetadata.cloud = outlierCloud;
+        outlierCloudMetadata.timestamp = 0.0;
+        outlierCloudMetadata.frame_id = "";
 
         segMsg.startRingIndex.assign(N_SCAN, 0);
         segMsg.endRingIndex.assign(N_SCAN, 0);
@@ -119,6 +131,8 @@ namespace lego_loam {
         groundRemoval();
         // Point cloud segmentation
         cloudSegmentation();
+        // Publish cloud
+        publishCloud();
 
     }
     
@@ -252,12 +266,12 @@ namespace lego_loam {
             }
         }
         // if (pubGroundCloud.getNumSubscribers() != 0){
-        //     for (size_t i = 0; i <= groundScanInd; ++i){
-        //         for (size_t j = 0; j < Horizon_SCAN; ++j){
-        //             if (groundMat.at<int8_t>(i,j) == 1)
-        //                 groundCloud->push_back(fullCloud->points[j + i*Horizon_SCAN]);
-        //         }
-        //     }
+        //    for (size_t i = 0; i <= groundScanInd; ++i){
+        //        for (size_t j = 0; j < Horizon_SCAN; ++j){
+        //            if (groundMat.at<int8_t>(i,j) == 1)
+        //                groundCloud->push_back(fullCloud->points[j + i*Horizon_SCAN]);
+        //        }
+        //    }
         // }
 
     }
@@ -415,6 +429,17 @@ namespace lego_loam {
         
     }
 
+    void ImageProjection::publishCloud() {
+        segMsg.timestamp = laserCloudInMetadata.timestamp;
+
+        segmentedCloudMetadata.cloud = segmentedCloud;
+        segmentedCloudMetadata.timestamp = laserCloudInMetadata.timestamp;
+        segmentedCloudMetadata.frame_id = "base_link";
+
+        outlierCloudMetadata.cloud = outlierCloud;
+        outlierCloudMetadata.timestamp = laserCloudInMetadata.timestamp;
+        outlierCloudMetadata.frame_id = "base_link";
+    }
     /*
     void ImageProjection::publishCloud(){
         // 1. Publish Seg Cloud Info

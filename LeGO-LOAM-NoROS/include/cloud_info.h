@@ -6,7 +6,8 @@
 namespace cloud_msgs
 {
     struct cloud_info
-    {
+    {   
+        double timestamp;
         std::vector<int32_t> startRingIndex;
         std::vector<int32_t> endRingIndex;
         float startOrientation = 0.0;

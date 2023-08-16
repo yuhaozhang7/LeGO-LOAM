@@ -64,6 +64,10 @@ public:
     pcl::PointCloud<PointType>::Ptr segmentedCloudPure;
     pcl::PointCloud<PointType>::Ptr outlierCloud;
 
+    PointCloudWithMetadata laserCloudInMetadata;
+    PointCloudWithMetadata segmentedCloudMetadata;
+    PointCloudWithMetadata outlierCloudMetadata;
+
     PointType nanPoint; // fill in fullCloud at each iteration
 
     cv::Mat rangeMat; // range matrix for range image

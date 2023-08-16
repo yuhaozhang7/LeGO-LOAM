@@ -38,7 +38,7 @@
 namespace lego_loam {
 
 class ImageProjection{
-private:
+public:
 
     // ros::NodeHandle nh;
 
@@ -79,26 +79,25 @@ private:
 
     std::vector<std::pair<int8_t, int8_t> > neighborIterator; // neighbor iterator for segmentaiton process
 
-    uint16_t *allPushedIndX; // array for tracking points of a segmented object
-    uint16_t *allPushedIndY;
+    std::vector<uint16_t> allPushedIndX; // array for tracking points of a segmented object
+    std::vector<uint16_t> allPushedIndY;
 
-    uint16_t *queueIndX; // array for breadth-first search process of segmentation, for speed
-    uint16_t *queueIndY;
+    std::vector<uint16_t> queueIndX; // array for breadth-first search process of segmentation, for speed
+    std::vector<uint16_t> queueIndY;
 
-public:
+// public:
     void allocateMemory();
 
     void resetParameters();
 
     ImageProjection();
-
     ~ImageProjection();
 
     // void copyPointCloud(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg);
     
     // void cloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg);
     
-    std::tuple<cloud_msgs::cloud_info, pcl::PointCloud<PointType>::Ptr, pcl::PointCloud<PointType>::Ptr> Process(double timestamp, const pcl::PointCloud<PointType>::Ptr &raw_cloud);
+    void Process();
 
     void findStartEndAngle();
 
@@ -111,6 +110,7 @@ public:
     void labelComponents(int row, int col);
     
     void publishCloud();
+
 };
 
 } // namespace of lego_loam

@@ -37,32 +37,7 @@
 
 namespace lego_loam {
 
-    /*
-    ImageProjection():
-        nh("~"){
-
-        subLaserCloud = nh.subscribe<sensor_msgs::PointCloud2>(pointCloudTopic, 1, &ImageProjection::cloudHandler, this);
-
-        pubFullCloud = nh.advertise<sensor_msgs::PointCloud2> ("/full_cloud_projected", 1);
-        pubFullInfoCloud = nh.advertise<sensor_msgs::PointCloud2> ("/full_cloud_info", 1);
-
-        pubGroundCloud = nh.advertise<sensor_msgs::PointCloud2> ("/ground_cloud", 1);
-        pubSegmentedCloud = nh.advertise<sensor_msgs::PointCloud2> ("/segmented_cloud", 1);
-        pubSegmentedCloudPure = nh.advertise<sensor_msgs::PointCloud2> ("/segmented_cloud_pure", 1);
-        pubSegmentedCloudInfo = nh.advertise<cloud_msgs::cloud_info> ("/segmented_cloud_info", 1);
-        pubOutlierCloud = nh.advertise<sensor_msgs::PointCloud2> ("/outlier_cloud", 1);
-
-        nanPoint.x = std::numeric_limits<float>::quiet_NaN();
-        nanPoint.y = std::numeric_limits<float>::quiet_NaN();
-        nanPoint.z = std::numeric_limits<float>::quiet_NaN();
-        nanPoint.intensity = -1;
-
-        allocateMemory();
-        resetParameters();
-    } */
-
     ImageProjection::ImageProjection() {
-
         nanPoint.x = std::numeric_limits<float>::quiet_NaN();
         nanPoint.y = std::numeric_limits<float>::quiet_NaN();
         nanPoint.z = std::numeric_limits<float>::quiet_NaN();
@@ -70,8 +45,9 @@ namespace lego_loam {
 
         allocateMemory();
         resetParameters();
-
     }
+
+    ImageProjection::~ImageProjection() {}
 
     void ImageProjection::allocateMemory() {
 
@@ -102,11 +78,11 @@ namespace lego_loam {
         neighbor.first =  0; neighbor.second = -1; neighborIterator.push_back(neighbor);
         neighbor.first =  1; neighbor.second =  0; neighborIterator.push_back(neighbor);
 
-        allPushedIndX = new uint16_t[N_SCAN*Horizon_SCAN];
-        allPushedIndY = new uint16_t[N_SCAN*Horizon_SCAN];
-
-        queueIndX = new uint16_t[N_SCAN*Horizon_SCAN];
-        queueIndY = new uint16_t[N_SCAN*Horizon_SCAN];
+        allPushedIndX.resize(N_SCAN*Horizon_SCAN);
+        allPushedIndY.resize(N_SCAN*Horizon_SCAN);
+        
+        queueIndX.resize(N_SCAN*Horizon_SCAN);
+        queueIndY.resize(N_SCAN*Horizon_SCAN);
 
     }
 
@@ -128,32 +104,10 @@ namespace lego_loam {
 
     }
 
-    ImageProjection::~ImageProjection() {}
+    void ImageProjection::Process() {
 
-    /*
-    void ImageProjection::copyPointCloud(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg){
+        // resetParameters();
 
-        cloudHeader = laserCloudMsg->header;
-        // cloudHeader.stamp = ros::Time::now(); // Ouster lidar users may need to uncomment this line
-        pcl::fromROSMsg(*laserCloudMsg, *laserCloudIn);
-        // Remove Nan points
-        std::vector<int> indices;
-        pcl::removeNaNFromPointCloud(*laserCloudIn, *laserCloudIn, indices);
-        // have "ring" channel in the cloud
-        if (useCloudRing == true){
-            pcl::fromROSMsg(*laserCloudMsg, *laserCloudInRing);
-            if (laserCloudInRing->is_dense == false) {
-                ROS_ERROR("Point cloud is not in dense format, please remove NaN points first!");
-                ros::shutdown();
-            }  
-        }
-    } */
-
-    std::tuple<cloud_msgs::cloud_info, pcl::PointCloud<PointType>::Ptr, pcl::PointCloud<PointType>::Ptr> ImageProjection::Process(
-                            double timestamp,
-                            const pcl::PointCloud<PointType>::Ptr &rawCloud) {
-
-        laserCloudIn = rawCloud;
         std::vector<int> indices;
         pcl::removeNaNFromPointCloud(*laserCloudIn, *laserCloudIn, indices);
 
@@ -165,13 +119,6 @@ namespace lego_loam {
         groundRemoval();
         // Point cloud segmentation
         cloudSegmentation();
-
-        auto result = std::make_tuple(segMsg, segmentedCloud, outlierCloud);
-
-        // Reset parameters for next iteration
-        resetParameters();
-
-        return result;
 
     }
     

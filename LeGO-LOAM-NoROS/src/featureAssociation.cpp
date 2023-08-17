@@ -34,6 +34,8 @@
 
 // #include "utility.h"
 #include "featureAssociation.h"
+#include <Eigen/Dense>
+#include <Eigen/Geometry>
 
 namespace lego_loam{
 
@@ -85,6 +87,16 @@ namespace lego_loam{
 
         surfPointsLessFlatScan.reset(new pcl::PointCloud<PointType>());
         surfPointsLessFlatScanDS.reset(new pcl::PointCloud<PointType>());
+
+        poses.reset(new pcl::PointCloud<pcl::PointXYZ>());
+
+        segmentedCloudMetadata.cloud = segmentedCloud;
+        outlierCloudMetadata.cloud = outlierCloud;
+
+        cornerPointsSharpMetadata.cloud = cornerPointsSharp;
+        cornerPointsLessSharpMetadata.cloud = cornerPointsLessSharp;
+        surfPointsFlatMetadata.cloud = surfPointsFlat;
+        surfPointsLessFlatMetadata.cloud = surfPointsLessFlat;
 
         timeScanCur = 0;
         timeNewSegmentedCloud = 0;
@@ -150,11 +162,18 @@ namespace lego_loam{
         laserCloudOri.reset(new pcl::PointCloud<PointType>());
         coeffSel.reset(new pcl::PointCloud<PointType>());
 
+        laserCloudCornerLastMetadata.cloud = laserCloudCornerLast;
+        laserCloudSurfLastMetadata.cloud = laserCloudSurfLast;
+        // laserCloudOriMetadata.cloud = laserCloudOri;
+        // coeffSelMetadata.cloud = coeffSel;
+
         kdtreeCornerLast.reset(new pcl::KdTreeFLANN<PointType>());
         kdtreeSurfLast.reset(new pcl::KdTreeFLANN<PointType>());
 
         // laserOdometry.header.frame_id = "/camera_init";
         // laserOdometry.child_frame_id = "/laser_odom";
+        laserOdometry.frame_id = "/camera_init";
+        laserOdometry.child_frame_id = "/laser_odom";
 
         // laserOdometryTrans.frame_id_ = "/camera_init";
         // laserOdometryTrans.child_frame_id_ = "/laser_odom";
@@ -664,6 +683,27 @@ namespace lego_loam{
         }
     }
 
+    void FeatureAssociation::publishCloud()
+    {   
+        if (timeScanCur < 1) std::cout << "WARN:time stamp is zero !" << std::endl;
+
+        cornerPointsSharpMetadata.cloud = cornerPointsSharp;
+        cornerPointsSharpMetadata.timestamp = timeScanCur;
+        cornerPointsSharpMetadata.frame_id = "/camera";
+
+        cornerPointsLessSharpMetadata.cloud = cornerPointsLessSharp;
+        cornerPointsLessSharpMetadata.timestamp = timeScanCur;
+        cornerPointsLessSharpMetadata.frame_id = "/camera";
+
+        surfPointsFlatMetadata.cloud = surfPointsFlat;
+        surfPointsFlatMetadata.timestamp = timeScanCur;
+        surfPointsFlatMetadata.frame_id = "/camera";
+
+        surfPointsLessFlatMetadata.cloud = surfPointsLessFlat;
+        surfPointsLessFlatMetadata.timestamp = timeScanCur;
+        surfPointsLessFlatMetadata.frame_id = "/camera";
+    }
+
     /*
     void publishCloud()
     {
@@ -928,7 +968,8 @@ namespace lego_loam{
         int cornerPointsSharpNum = cornerPointsSharp->points.size();
 
         for (int i = 0; i < cornerPointsSharpNum; i++) {
-
+            
+            // ==================================================================================
             TransformToStart(&cornerPointsSharp->points[i], &pointSel);
 
             if (iterCount % 5 == 0) {
@@ -1039,7 +1080,7 @@ namespace lego_loam{
         int surfPointsFlatNum = surfPointsFlat->points.size();
 
         for (int i = 0; i < surfPointsFlatNum; i++) {
-
+            // ======================================================================================
             TransformToStart(&surfPointsFlat->points[i], &pointSel);
 
             if (iterCount % 5 == 0) {
@@ -1500,6 +1541,14 @@ namespace lego_loam{
         laserCloudCornerLastNum = laserCloudCornerLast->points.size();
         laserCloudSurfLastNum = laserCloudSurfLast->points.size();
 
+        laserCloudCornerLastMetadata.cloud = laserCloudCornerLast;
+        laserCloudCornerLastMetadata.timestamp = timeScanCur;
+        laserCloudCornerLastMetadata.frame_id = "/camera";
+
+        laserCloudSurfLastMetadata.cloud = laserCloudSurfLast;
+        laserCloudSurfLastMetadata.timestamp = timeScanCur;
+        laserCloudSurfLastMetadata.frame_id = "/camera";
+
         // sensor_msgs::PointCloud2 laserCloudCornerLast2;
         // pcl::toROSMsg(*laserCloudCornerLast, laserCloudCornerLast2);
         // laserCloudCornerLast2.header.stamp = cloudHeader.stamp;
@@ -1626,6 +1675,35 @@ namespace lego_loam{
         tfBroadcaster.sendTransform(laserOdometryTrans);
     } */
 
+    Eigen::Quaterniond createQuaternionFromRollPitchYaw(double roll, double pitch, double yaw){
+        Eigen::AngleAxisd rollAngle(roll, Eigen::Vector3d::UnitX());
+        Eigen::AngleAxisd pitchAngle(pitch, Eigen::Vector3d::UnitY());
+        Eigen::AngleAxisd yawAngle(yaw, Eigen::Vector3d::UnitZ());
+
+        Eigen::Quaterniond q = yawAngle * pitchAngle * rollAngle;
+
+        return q;
+    }
+
+    void FeatureAssociation::publishOdometry(){
+        Eigen::Quaterniond geoQuat = createQuaternionFromRollPitchYaw(transformSum[2], -transformSum[0], -transformSum[1]);
+
+        laserOdometry.timestamp = timeScanCur;
+        laserOdometry.orientationX = -geoQuat.y();
+        laserOdometry.orientationY = -geoQuat.z();
+        laserOdometry.orientationZ = geoQuat.x();
+        laserOdometry.orientationW = geoQuat.w();
+        laserOdometry.positionX = transformSum[3];
+        laserOdometry.positionY = transformSum[4];
+        laserOdometry.positionZ = transformSum[5];
+
+        // pcl::PointXYZ point;
+        // point.x = static_cast<float>(transformSum[3]);
+        // point.y = static_cast<float>(transformSum[4]);
+        // point.z = static_cast<float>(transformSum[5]);
+        // poses->push_back(point);
+    }
+
     void FeatureAssociation::adjustOutlierCloud(){
         PointType point;
         int cloudSize = outlierCloud->points.size();
@@ -1677,6 +1755,18 @@ namespace lego_loam{
             frameCount = 0;
 
             adjustOutlierCloud();
+
+            outlierCloudMetadata.cloud = outlierCloud;
+            outlierCloudMetadata.timestamp = timeScanCur;
+            outlierCloudMetadata.frame_id = "/camera";
+
+            laserCloudCornerLastMetadata.cloud = laserCloudCornerLast;
+            laserCloudCornerLastMetadata.timestamp = timeScanCur;
+            laserCloudCornerLastMetadata.frame_id = "/camera";
+
+            laserCloudSurfLastMetadata.cloud = laserCloudSurfLast;
+            laserCloudSurfLastMetadata.timestamp = timeScanCur;
+            laserCloudSurfLastMetadata.frame_id = "/camera";
             /*
             sensor_msgs::PointCloud2 outlierCloudLast2;
             pcl::toROSMsg(*outlierCloud, outlierCloudLast2);
@@ -1723,7 +1813,7 @@ namespace lego_loam{
 
         extractFeatures();
 
-        // publishCloud(); // cloud for visualization
+        publishCloud(); // cloud for visualization
 	
         /**
 		2. Feature Association
@@ -1739,9 +1829,9 @@ namespace lego_loam{
 
         integrateTransformation();
 
-        // publishOdometry();
+        publishOdometry();
 
-        // publishCloudsLast(); // cloud to mapOptimization
+        publishCloudsLast(); // cloud to mapOptimization
     }
 };
 

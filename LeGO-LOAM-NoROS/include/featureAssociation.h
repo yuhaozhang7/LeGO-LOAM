@@ -52,6 +52,16 @@ public:
     pcl::PointCloud<PointType>::Ptr surfPointsLessFlatScan;
     pcl::PointCloud<PointType>::Ptr surfPointsLessFlatScanDS;
 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr poses;
+
+    PointCloudWithMetadata segmentedCloudMetadata;
+    PointCloudWithMetadata outlierCloudMetadata;
+
+    PointCloudWithMetadata cornerPointsSharpMetadata;
+    PointCloudWithMetadata cornerPointsLessSharpMetadata;
+    PointCloudWithMetadata surfPointsFlatMetadata;
+    PointCloudWithMetadata surfPointsLessFlatMetadata;
+
     pcl::VoxelGrid<PointType> downSizeFilter;
 
     double timeScanCur;
@@ -147,6 +157,11 @@ public:
     pcl::PointCloud<PointType>::Ptr laserCloudOri;
     pcl::PointCloud<PointType>::Ptr coeffSel;
 
+    PointCloudWithMetadata laserCloudCornerLastMetadata;
+    PointCloudWithMetadata laserCloudSurfLastMetadata;
+    // PointCloudWithMetadata laserCloudOriMetadata;
+    // PointCloudWithMetadata coeffSelMetadata;
+
     pcl::KdTreeFLANN<PointType>::Ptr kdtreeCornerLast;
     pcl::KdTreeFLANN<PointType>::Ptr kdtreeSurfLast;
 
@@ -156,6 +171,7 @@ public:
     PointType pointOri, pointSel, tripod1, tripod2, tripod3, pointProj, coeff;
 
     // nav_msgs::Odometry laserOdometry;
+    Odometry laserOdometry;
 
     // tf::TransformBroadcaster tfBroadcaster;
     // tf::StampedTransform laserOdometryTrans;
@@ -167,6 +183,7 @@ public:
 
     // ============================functions===================================
     FeatureAssociation();
+    ~FeatureAssociation();
 
     void initializationValue();
 

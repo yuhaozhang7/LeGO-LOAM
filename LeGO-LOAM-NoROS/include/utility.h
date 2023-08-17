@@ -69,6 +69,14 @@ const float ang_res_y = 2.0;
 const float ang_bottom = 15.0+0.1;
 const int groundScanInd = 7;
 
+// VEL-64
+// const int N_SCAN = 64;
+// const int Horizon_SCAN = 1800;
+// const float ang_res_x = 0.2;
+// const float ang_res_y = 0.427;
+// const float ang_bottom = 24.9;
+//  const int groundScanInd = 50;
+
 // HDL-32E
 // extern const int N_SCAN = 32;
 // extern const int Horizon_SCAN = 1800;
@@ -191,9 +199,23 @@ typedef PointXYZIRPYT  PointTypePose;
 
 struct PointCloudWithMetadata
 {
-  pcl::PointCloud<pcl::PointXYZI>::Ptr cloud;
+  pcl::PointCloud<PointType>::Ptr cloud;
   double timestamp;
   std::string frame_id;
+};
+
+struct Odometry
+{   
+    std::string frame_id;
+    std::string child_frame_id;
+    double timestamp;
+    double orientationX;
+    double orientationY;
+    double orientationZ;
+    double orientationW;
+    double positionX;
+    double positionY;
+    double positionZ;
 };
 
 #endif

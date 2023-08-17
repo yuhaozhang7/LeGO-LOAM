@@ -7,6 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
 # find_package(GTSAM REQUIRED QUIET)
 # find_package(PCL REQUIRED QUIET)
 # find_package(OpenCV REQUIRED QUIET)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 
 SET(EIGEN3_INCLUDE_DIRS "/home/yuhao/slambench/deps/eigen3/include/eigen3")
 SET(PCL_INCLUDE_DIRS "/home/yuhao/slambench/deps/pcl/include/pcl-1.8")
@@ -27,6 +28,7 @@ include_directories(
 	${PCL_INCLUDE_DIRS}
 	${OpenCV_INCLUDE_DIRS}
 	${GTSAM_INCLUDE_DIRS}
+	${Boost_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -40,13 +42,16 @@ add_library(${PROJECT_NAME} SHARED
 ./include/cloud_info.h 
 ./include/imageProjection.h 
 ./include/featureAssociation.h
+./include/mapOptimization.h
 ./include/utility.h 
 ./src/imageProjection.cpp
-./src/featureAssociation.cpp)
+./src/featureAssociation.cpp
+./src/mapOptimization.cpp)
 
 add_executable(run ./src/legoloam.cpp)
 target_link_libraries(run
 	${PROJECT_NAME}
     ${PCL_LIBRARIES}
     ${OpenCV_LIBRARIES}
-    ${GTSAM_LIBRARIES})
+    ${GTSAM_LIBRARIES}
+	${Boost_FILESYSTEM_LIBRARY})

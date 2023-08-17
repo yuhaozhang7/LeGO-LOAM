@@ -216,6 +216,12 @@ struct Odometry
     double positionX;
     double positionY;
     double positionZ;
+    double angularX;
+    double angularY;
+    double angularZ;
+    double linearX;
+    double linearY;
+    double linearZ;
 };
 
 #endif

@@ -45,6 +45,7 @@ namespace lego_loam {
 
         allocateMemory();
         resetParameters();
+
     }
 
     ImageProjection::~ImageProjection() {}
@@ -116,7 +117,7 @@ namespace lego_loam {
 
     }
 
-    void ImageProjection::Process() {
+    void ImageProjection::process() {
 
         // resetParameters();
 

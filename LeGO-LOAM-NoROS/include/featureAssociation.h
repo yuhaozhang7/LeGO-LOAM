@@ -205,9 +205,11 @@ public:
 
     // void laserCloudInfoHandler(const cloud_msgs::cloud_infoConstPtr& msgIn);
 
-    void adjustInput(const cloud_msgs::cloud_info &msgIn,
-                                         const PointCloudWithMetadata &segmentedCloudIn,
-                                         const PointCloudWithMetadata &outlierCloudIn);
+    void adjustLaserInput(const cloud_msgs::cloud_info &msgIn,
+                          const PointCloudWithMetadata &segmentedCloudIn,
+                          const PointCloudWithMetadata &outlierCloudIn);
+    
+    void adjustIMUInput(IMUType &imuIn);
 
     void adjustDistortion();
 
@@ -257,7 +259,7 @@ public:
 
     void publishCloudsLast();
 
-    void runFeatureAssociation();
+    void process();
 
 };
 

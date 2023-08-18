@@ -100,6 +100,7 @@ namespace lego_loam{
         cloudKeyPoses6D.reset(new pcl::PointCloud<PointTypePose>());
 
         cloudKeyPoses3DMetadata.cloud = cloudKeyPoses3D;
+        cloudOutMetadata.cloud.reset(new pcl::PointCloud<PointType>());
 
         kdtreeSurroundingKeyPoses.reset(new pcl::KdTreeFLANN<PointType>());
         kdtreeHistoryKeyPoses.reset(new pcl::KdTreeFLANN<PointType>());
@@ -476,6 +477,27 @@ namespace lego_loam{
         transformSum[5] = laserOdometryIn.positionZ;
         newLaserOdometry = true;
     }
+
+    void MapOptimization::adjustIMUInput(IMUType &imuIn) {
+        double roll, pitch, yaw;
+
+        Eigen::Quaterniond q(
+            imuIn.orientationW,
+            imuIn.orientationX,
+            imuIn.orientationY,
+            imuIn.orientationZ
+        );
+        Eigen::Vector3d euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+        roll = euler[0];
+        pitch = euler[1];
+        yaw = euler[2];
+
+        imuPointerLast = (imuPointerLast + 1) % imuQueLength;
+        imuTime[imuPointerLast] = imuIn.timestamp;
+        imuRoll[imuPointerLast] = roll;
+        imuPitch[imuPointerLast] = pitch;
+    }
+    
     /*
     void laserCloudOutlierLastHandler(const sensor_msgs::PointCloud2ConstPtr& msg){
         timeLaserCloudOutlierLast = msg->header.stamp.toSec();
@@ -595,6 +617,14 @@ namespace lego_loam{
         cloudKeyPoses3DMetadata.cloud = cloudKeyPoses3D;
         cloudKeyPoses3DMetadata.timestamp = timeLaserOdometry;
         cloudKeyPoses3DMetadata.frame_id = "/camera_init";
+
+
+        pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
+        PointTypePose thisPose6D = trans2PointTypePose(transformTobeMapped);
+        *(cloudOutMetadata.cloud) += *transformPointCloud(laserCloudCornerLastDS,  &thisPose6D);
+        *(cloudOutMetadata.cloud) += *transformPointCloud(laserCloudSurfTotalLast, &thisPose6D);
+        cloudOutMetadata.timestamp = timeLaserOdometry;
+        cloudOutMetadata.frame_id = "/camera_init";
     }
 
     /*
@@ -1395,7 +1425,7 @@ namespace lego_loam{
         laserCloudSurfFromMapDS->clear();   
     }
 
-    void MapOptimization::run(){
+    void MapOptimization::process(){
 
         if (newLaserCloudCornerLast  && std::abs(timeLaserCloudCornerLast  - timeLaserOdometry) < 0.005 &&
             newLaserCloudSurfLast    && std::abs(timeLaserCloudSurfLast    - timeLaserOdometry) < 0.005 &&
@@ -1426,7 +1456,7 @@ namespace lego_loam{
                 publishTF();
 
                 publishKeyPosesAndFrames();
-
+                
                 clearCloud();
             }
         }

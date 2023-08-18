@@ -82,8 +82,10 @@ public:
     PointType currentRobotPosPoint;
 
     pcl::PointCloud<PointType>::Ptr cloudKeyPoses3D;
-    PointCloudWithMetadata cloudKeyPoses3DMetadata;
     pcl::PointCloud<PointTypePose>::Ptr cloudKeyPoses6D;
+
+    PointCloudWithMetadata cloudKeyPoses3DMetadata;
+    PointCloudWithMetadata cloudOutMetadata;
 
     pcl::PointCloud<PointType>::Ptr surroundingKeyPoses;
     pcl::PointCloud<PointType>::Ptr surroundingKeyPosesDS;
@@ -215,6 +217,8 @@ public:
                           const PointCloudWithMetadata &laserCloudSurfLastIn,
                           const Odometry &laserOdometryIn);
 
+    void adjustIMUInput(IMUType &imuIn);
+
     void allocateMemory();
 
     void transformAssociateToMap();
@@ -280,7 +284,7 @@ public:
 
     void clearCloud();
 
-    void run();
+    void process();
 
 };
 

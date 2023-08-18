@@ -101,7 +101,7 @@ public:
     
     // void cloudHandler(const sensor_msgs::PointCloud2ConstPtr& laserCloudMsg);
     
-    void Process();
+    void process();
 
     void findStartEndAngle();
 

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(lego_loam)
+project(legoloam)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
 # set(CMAKE_BUILD_TYPE "Debug")
@@ -7,51 +7,83 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
 # find_package(GTSAM REQUIRED QUIET)
 # find_package(PCL REQUIRED QUIET)
 # find_package(OpenCV REQUIRED QUIET)
-find_package(Boost REQUIRED COMPONENTS filesystem)
+# find_package(Boost REQUIRED COMPONENTS filesystem)
 
-SET(EIGEN3_INCLUDE_DIRS "/home/yuhao/slambench/deps/eigen3/include/eigen3")
-SET(PCL_INCLUDE_DIRS "/home/yuhao/slambench/deps/pcl/include/pcl-1.8")
-SET(OpenCV_INCLUDE_DIRS "/home/yuhao/slambench/deps/opencv/include")
-SET(GTSAM_INCLUDE_DIRS "/home/yuhao/Downloads/gtsam/include")
+SET(EIGEN3_INCLUDE_DIR "/home/yuhao/slambench/deps/eigen3/include/eigen3")
+SET(PCL_INCLUDE_DIR "/home/yuhao/slambench/deps/pcl/include/pcl-1.8")
+SET(OpenCV_INCLUDE_DIR "/home/yuhao/slambench/deps/opencv/include")
+SET(GTSAM_INCLUDE_DIR "/home/yuhao/Downloads/gtsam/include")
+SET(SLAMBENCH_INCLUDE_DIR "/home/yuhao/slambench/framework/shared/include")
 
-SET(PCL_LIBRARY_DIRS "/home/yuhao/slambench/deps/pcl/lib")
-SET(OpenCV_LIBRARY_DIRS "/home/yuhao/slambench/deps/opencv/lib")
-SET(GTSAM_LIBRARY_DIRS "/home/yuhao/Downloads/gtsam/lib")
+SET(WRAPPER_PATH "/deps/loam/wrapper/")
 
-file(GLOB PCL_LIBRARIES "${PCL_LIBRARY_DIRS}/libpcl_*.so*")
-file(GLOB OpenCV_LIBRARIES "${OpenCV_LIBRARY_DIRS}/libopencv_*.so*")
-file(GLOB GTSAM_LIBRARIES "${GTSAM_LIBRARY_DIRS}/lib*.*")
+SET(PCL_LIBRARY_DIR "/home/yuhao/slambench/deps/pcl/lib")
+SET(OpenCV_LIBRARY_DIR "/home/yuhao/slambench/deps/opencv/lib")
+SET(GTSAM_LIBRARY_DIR "/home/yuhao/Downloads/gtsam/lib")
+
+file(GLOB PCL_LIBRARIES "${PCL_LIBRARY_DIR}/libpcl_*.so*")
+file(GLOB OpenCV_LIBRARIES "${OpenCV_LIBRARY_DIR}/libopencv_*.so*")
+file(GLOB GTSAM_LIBRARIES "${GTSAM_LIBRARY_DIR}/lib*.*")
 
 include_directories(
 	include
-    ${EIGEN3_INCLUDE_DIRS}
-	${PCL_INCLUDE_DIRS}
-	${OpenCV_INCLUDE_DIRS}
-	${GTSAM_INCLUDE_DIRS}
-	${Boost_INCLUDE_DIRS}
+    ${EIGEN3_INCLUDE_DIR}
+	${PCL_INCLUDE_DIR}
+	${OpenCV_INCLUDE_DIR}
+	${GTSAM_INCLUDE_DIR}
+	${Boost_INCLUDE_DIR}
+	${SLAMBENCH_INCLUDE_DIR}
 )
 
 link_directories(
 	include
-	${OpenCV_LIBRARY_DIRS}
-	${PCL_LIBRARY_DIRS}
-	${GTSAM_LIBRARY_DIRS}
+	${OpenCV_LIBRARY_DIR}
+	${PCL_LIBRARY_DIR}
+	${GTSAM_LIBRARY_DIR}
 )
 
 add_library(${PROJECT_NAME} SHARED
-./include/cloud_info.h 
-./include/imageProjection.h 
+./include/cloud_info.h
+./include/utility.h
+./include/imageProjection.h
 ./include/featureAssociation.h
 ./include/mapOptimization.h
-./include/utility.h 
+./include/legoloam.h
 ./src/imageProjection.cpp
 ./src/featureAssociation.cpp
-./src/mapOptimization.cpp)
+./src/mapOptimization.cpp
+./src/legoloam.cpp)
 
-add_executable(run ./src/legoloam.cpp)
-target_link_libraries(run
+#add_executable(run ./src/legoloam.cpp)
+#target_link_libraries(run
+#	${PROJECT_NAME}
+#    ${PCL_LIBRARIES}
+#    ${OpenCV_LIBRARIES}
+#    ${GTSAM_LIBRARIES}
+#	${Boost_FILESYSTEM_LIBRARY})
+
+add_library(${PROJECT_NAME}-original SHARED legoloam_library.cpp)
+install(TARGETS ${PROJECT_NAME}  DESTINATION  lib/)
+install(TARGETS ${PROJECT_NAME}-original  DESTINATION  lib/)
+
+target_link_libraries(${PROJECT_NAME}-original
 	${PROJECT_NAME}
-    ${PCL_LIBRARIES}
+	${PCL_LIBRARIES}
     ${OpenCV_LIBRARIES}
-    ${GTSAM_LIBRARIES}
-	${Boost_FILESYSTEM_LIBRARY})
+    ${GTSAM_LIBRARIES})
+
+SET(SLAMBENCH_C_WRAPPER	-Wl,--whole-archive -L${WRAPPER_PATH} slambench-c-wrapper	-Wl,--no-whole-archive)
+SET(NULL_FILE_PATH	${WRAPPER_PATH}/null.cpp)
+
+function(generate_slam_library library_name )
+
+    add_library(${library_name}-library SHARED ${NULL_FILE_PATH})
+    target_link_libraries(${library_name}-library PRIVATE ${SLAMBENCH_C_WRAPPER} ${library_name})
+    SET_TARGET_PROPERTIES(${library_name}-library PROPERTIES LINK_FLAGS "${ARGN}")
+    # SET_TARGET_PROPERTIES(${library_name}-library PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "${LIB_PATH}")
+    install(TARGETS ${library_name}-library  DESTINATION  lib/)
+
+endfunction()
+
+# generate_slam_library(${PROJECT_NAME}-original "-Wl,--disable-new-dtags")
+generate_slam_library(${PROJECT_NAME}-original "")

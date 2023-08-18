@@ -363,7 +363,7 @@ namespace lego_loam{
         newSegmentedCloudInfo = true;
     } */
 
-    void FeatureAssociation::adjustInput(const cloud_msgs::cloud_info &msgIn,
+    void FeatureAssociation::adjustLaserInput(const cloud_msgs::cloud_info &msgIn,
                                          const PointCloudWithMetadata &segmentedCloudIn,
                                          const PointCloudWithMetadata &outlierCloudIn) {
         // handle info message
@@ -386,6 +386,43 @@ namespace lego_loam{
         *outlierCloud = *(outlierCloudIn.cloud);
         newOutlierCloud = true;
 
+    }
+
+    void FeatureAssociation::adjustIMUInput(IMUType &imuIn) {
+        double roll, pitch, yaw;
+
+        Eigen::Quaterniond q(
+            imuIn.orientationW,
+            imuIn.orientationX,
+            imuIn.orientationY,
+            imuIn.orientationZ
+        );
+        Eigen::Vector3d euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+        roll = euler[0];
+        pitch = euler[1];
+        yaw = euler[2];
+
+        float accX = imuIn.linearY - sin(roll) * cos(pitch) * 9.81;
+        float accY = imuIn.linearZ - cos(roll) * cos(pitch) * 9.81;
+        float accZ = imuIn.linearX + sin(pitch) * 9.81;
+
+        imuPointerLast = (imuPointerLast + 1) % imuQueLength;
+
+        imuTime[imuPointerLast] = imuIn.timestamp;
+
+        imuRoll[imuPointerLast] = roll;
+        imuPitch[imuPointerLast] = pitch;
+        imuYaw[imuPointerLast] = yaw;
+
+        imuAccX[imuPointerLast] = accX;
+        imuAccY[imuPointerLast] = accY;
+        imuAccZ[imuPointerLast] = accZ;
+
+        imuAngularVeloX[imuPointerLast] = imuIn.angularX;
+        imuAngularVeloY[imuPointerLast] = imuIn.angularY;
+        imuAngularVeloZ[imuPointerLast] = imuIn.angularZ;
+
+        AccumulateIMUShiftAndRotation();
     }
 
     void FeatureAssociation::adjustDistortion()
@@ -1789,7 +1826,7 @@ namespace lego_loam{
         }
     }
 
-    void FeatureAssociation::runFeatureAssociation()
+    void FeatureAssociation::process()
     {
 
         if (newSegmentedCloud && newSegmentedCloudInfo && newOutlierCloud &&

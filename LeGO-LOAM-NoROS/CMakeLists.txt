@@ -2,28 +2,11 @@ cmake_minimum_required(VERSION 2.8.3)
 project(legoloam)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
-# set(CMAKE_BUILD_TYPE "Debug")
 
 # find_package(GTSAM REQUIRED QUIET)
 # find_package(PCL REQUIRED QUIET)
 # find_package(OpenCV REQUIRED QUIET)
-# find_package(Boost REQUIRED COMPONENTS filesystem)
-
-SET(EIGEN3_INCLUDE_DIR "/home/yuhao/slambench/deps/eigen3/include/eigen3")
-SET(PCL_INCLUDE_DIR "/home/yuhao/slambench/deps/pcl/include/pcl-1.8")
-SET(OpenCV_INCLUDE_DIR "/home/yuhao/slambench/deps/opencv/include")
-SET(GTSAM_INCLUDE_DIR "/home/yuhao/Downloads/gtsam/include")
-SET(SLAMBENCH_INCLUDE_DIR "/home/yuhao/slambench/framework/shared/include")
-
-SET(WRAPPER_PATH "/deps/loam/wrapper/")
-
-SET(PCL_LIBRARY_DIR "/home/yuhao/slambench/deps/pcl/lib")
-SET(OpenCV_LIBRARY_DIR "/home/yuhao/slambench/deps/opencv/lib")
-SET(GTSAM_LIBRARY_DIR "/home/yuhao/Downloads/gtsam/lib")
-
-file(GLOB PCL_LIBRARIES "${PCL_LIBRARY_DIR}/libpcl_*.so*")
-file(GLOB OpenCV_LIBRARIES "${OpenCV_LIBRARY_DIR}/libopencv_*.so*")
-file(GLOB GTSAM_LIBRARIES "${GTSAM_LIBRARY_DIR}/lib*.*")
+find_package(yaml-cpp REQUIRED)
 
 include_directories(
 	include
@@ -32,14 +15,8 @@ include_directories(
 	${OpenCV_INCLUDE_DIR}
 	${GTSAM_INCLUDE_DIR}
 	${Boost_INCLUDE_DIR}
+	${YAML_CPP_INCLUDE_DIR}
 	${SLAMBENCH_INCLUDE_DIR}
-)
-
-link_directories(
-	include
-	${OpenCV_LIBRARY_DIR}
-	${PCL_LIBRARY_DIR}
-	${GTSAM_LIBRARY_DIR}
 )
 
 add_library(${PROJECT_NAME} SHARED
@@ -54,13 +31,6 @@ add_library(${PROJECT_NAME} SHARED
 ./src/mapOptimization.cpp
 ./src/legoloam.cpp)
 
-#add_executable(run ./src/legoloam.cpp)
-#target_link_libraries(run
-#	${PROJECT_NAME}
-#    ${PCL_LIBRARIES}
-#    ${OpenCV_LIBRARIES}
-#    ${GTSAM_LIBRARIES}
-#	${Boost_FILESYSTEM_LIBRARY})
 
 add_library(${PROJECT_NAME}-original SHARED legoloam_library.cpp)
 install(TARGETS ${PROJECT_NAME}  DESTINATION  lib/)
@@ -70,6 +40,7 @@ target_link_libraries(${PROJECT_NAME}-original
 	${PROJECT_NAME}
 	${PCL_LIBRARIES}
     ${OpenCV_LIBRARIES}
+	${YAML_CPP_LIBRARIES}
     ${GTSAM_LIBRARIES})
 
 SET(SLAMBENCH_C_WRAPPER	-Wl,--whole-archive -L${WRAPPER_PATH} slambench-c-wrapper	-Wl,--no-whole-archive)
@@ -80,10 +51,9 @@ function(generate_slam_library library_name )
     add_library(${library_name}-library SHARED ${NULL_FILE_PATH})
     target_link_libraries(${library_name}-library PRIVATE ${SLAMBENCH_C_WRAPPER} ${library_name})
     SET_TARGET_PROPERTIES(${library_name}-library PROPERTIES LINK_FLAGS "${ARGN}")
-    # SET_TARGET_PROPERTIES(${library_name}-library PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "${LIB_PATH}")
+    SET_TARGET_PROPERTIES(${library_name}-library PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE INSTALL_RPATH "${LIB_PATH}")
     install(TARGETS ${library_name}-library  DESTINATION  lib/)
 
 endfunction()
 
-# generate_slam_library(${PROJECT_NAME}-original "-Wl,--disable-new-dtags")
-generate_slam_library(${PROJECT_NAME}-original "")
+generate_slam_library(${PROJECT_NAME}-original "-Wl,--disable-new-dtags")

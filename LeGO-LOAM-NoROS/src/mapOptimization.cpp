@@ -618,8 +618,6 @@ namespace lego_loam{
         cloudKeyPoses3DMetadata.timestamp = timeLaserOdometry;
         cloudKeyPoses3DMetadata.frame_id = "/camera_init";
 
-
-        pcl::PointCloud<PointType>::Ptr cloudOut(new pcl::PointCloud<PointType>());
         PointTypePose thisPose6D = trans2PointTypePose(transformTobeMapped);
         *(cloudOutMetadata.cloud) += *transformPointCloud(laserCloudCornerLastDS,  &thisPose6D);
         *(cloudOutMetadata.cloud) += *transformPointCloud(laserCloudSurfTotalLast, &thisPose6D);

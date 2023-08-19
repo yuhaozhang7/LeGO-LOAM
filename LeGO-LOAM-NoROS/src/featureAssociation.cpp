@@ -819,6 +819,7 @@ namespace lego_loam{
     void FeatureAssociation::TransformToStart(PointType const * const pi, PointType * const po)
     {
         float s = 10 * (pi->intensity - int(pi->intensity));
+        if (dataset_name == "KITTI") s = 1;
 
         float rx = s * transformCur[0];
         float ry = s * transformCur[1];
@@ -844,6 +845,7 @@ namespace lego_loam{
     void FeatureAssociation::TransformToEnd(PointType const * const pi, PointType * const po)
     {
         float s = 10 * (pi->intensity - int(pi->intensity));
+        if (dataset_name == "KITTI") s = 1;
 
         float rx = s * transformCur[0];
         float ry = s * transformCur[1];

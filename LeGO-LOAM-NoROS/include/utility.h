@@ -61,13 +61,24 @@ const string fileDirectory = "/tmp/";
 // Using velodyne cloud "ring" channel for image projection (other lidar may have different name for this channel, change "PointXYZIR" below)
 const bool useCloudRing = false; // if true, ang_res_y and ang_bottom are not used
 
+// extern variables that depends on the input dataset
+extern int N_SCAN;
+extern int Horizon_SCAN;
+extern float ang_res_x;
+extern float ang_res_y;
+extern float ang_bottom;
+extern int groundScanInd;
+extern float segmentAlphaX;
+extern float segmentAlphaY;
+extern string dataset_name;
+
 // VLP-16
-const int N_SCAN = 16;
-const int Horizon_SCAN = 1800;
-const float ang_res_x = 0.2;
-const float ang_res_y = 2.0;
-const float ang_bottom = 15.0+0.1;
-const int groundScanInd = 7;
+// const int N_SCAN = 16;
+// const int Horizon_SCAN = 1800;
+// const float ang_res_x = 0.2;
+// const float ang_res_y = 2.0;
+// const float ang_bottom = 15.0+0.1;
+// const int groundScanInd = 7;
 
 // VEL-64
 // const int N_SCAN = 64;
@@ -123,8 +134,8 @@ const float sensorMountAngle = 0.0;
 const float segmentTheta = 60.0/180.0*M_PI; // decrese this value may improve accuracy
 const int segmentValidPointNum = 5;
 const int segmentValidLineNum = 3;
-const float segmentAlphaX = ang_res_x / 180.0 * M_PI;
-const float segmentAlphaY = ang_res_y / 180.0 * M_PI;
+// const float segmentAlphaX = ang_res_x / 180.0 * M_PI;
+// const float segmentAlphaY = ang_res_y / 180.0 * M_PI;
 
 
 const int edgeFeatureNum = 2;
@@ -144,7 +155,6 @@ const int   historyKeyframeSearchNum = 25; // 2n+1 number of hostory key frames 
 const float historyKeyframeFitnessScore = 0.3; // the smaller the better alignment
 
 const float globalMapVisualizationSearchRadius = 500.0; // key frames with in n meters will be visualized
-
 
 struct smoothness_t{ 
     float value;

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <yaml-cpp/node/node.h>
 #include "imageProjection.h"
 #include "featureAssociation.h"
 #include "mapOptimization.h"

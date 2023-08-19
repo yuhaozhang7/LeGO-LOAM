@@ -19,6 +19,7 @@
 
 #include <pcl/io/pcd_io.h>
 #include <pcl/common/transforms.h>
+#include <yaml-cpp/yaml.h>
 
 #include <chrono>
 #include <filesystem>
@@ -26,15 +27,23 @@
 #include <thread>
 
 #include "include/legoloam.h"
-#include "utility"
 
-
-const std::string default_yaml_path = "/deps/legoloam/configs/default.yaml";
-const std::string dirname = "/mnt/d/Download/Dataset/Kitti/2011_09_30/2011_09_30_drive_0027_sync/velodyne_points/pcd/";
+const std::string default_yaml_path = "/deps/legoloam/configs/configs.yaml";
+// const std::string test_yaml_path = "/home/yuhao/legoloam/LeGO-LOAM-NoROS/configs/configs.yaml"
 
 // Parameters
-std::string lidar_name;
 std::string yaml_path;
+bool show_point_cloud;
+// extern parameters in utility.h
+int N_SCAN;
+int Horizon_SCAN;
+float ang_res_x;
+float ang_res_y;
+float ang_bottom;
+int groundScanInd;
+float segmentAlphaX;
+float segmentAlphaY;
+std::string dataset_name;
 
 // Sensors
 slambench::io::LidarSensor *lidar_sensor;
@@ -51,7 +60,7 @@ slambench::outputs::Output *pointcloud_output;
 // System
 static lego_loam::LeGOLOAM legoloam;
 // contains rotation only
-Eigen::Matrix4f velo_2_lgrey = (Eigen::Matrix4f() << 9.999728e-01f,  7.027479e-03f, -2.255075e-03f,  0.000000e+00f,
+Eigen::Matrix4f velo_2_lgrey_kitti = (Eigen::Matrix4f() << 9.999728e-01f,  7.027479e-03f, -2.255075e-03f,  0.000000e+00f,
                                                     -7.027555e-03f,  9.999753e-01f, -2.599616e-05f,  0.000000e+00f,
                                                      2.254837e-03f,  4.184312e-05f,  9.999975e-01f,  0.000000e+00f,
                                                      0.000000e+00f,  0.000000e+00f,  0.000000e+00f,  1.000000e+00f).finished();
@@ -89,8 +98,35 @@ bool sb_init_slam_system(SLAMBenchLibraryHelper *slam_settings) {
         return false;
     }
 
-    // Start LeGO-LOAM
+    // ================================Read YAML================================
+    YAML::Node config = YAML::LoadFile("/home/yuhao/legoloam/LeGO-LOAM-NoROS/configs/configs.yaml");
 
+    N_SCAN = config["N_SCAN"].as<int>();
+    Horizon_SCAN = config["Horizon_SCAN"].as<int>();
+    ang_res_x = config["ang_res_x"].as<float>();
+    ang_res_y = config["ang_res_y"].as<float>();
+    ang_bottom = config["ang_bottom"].as<float>();
+    groundScanInd = config["groundScanInd"].as<int>();
+    segmentAlphaX = ang_res_x / 180.0 * M_PI;
+    segmentAlphaY = ang_res_y / 180.0 * M_PI;
+    dataset_name = config["dataset_name"].as<std::string>();
+
+    show_point_cloud = config["show_point_cloud"].as<bool>();
+    
+    std::cout << "N_SCAN: " << N_SCAN << std::endl;
+    std::cout << "Horizon_SCAN: " << Horizon_SCAN << std::endl;
+    std::cout << "ang_res_x: " << ang_res_x << std::endl;
+    std::cout << "ang_res_y: " << ang_res_y << std::endl;
+    std::cout << "ang_bottom: " << ang_bottom << std::endl;
+    std::cout << "groundScanInd: " << groundScanInd << std::endl;
+    std::cout << "dataset_name: " << dataset_name << std::endl;
+
+    if (dataset_name == "KITTI") {
+        std::cout << "Use KITTI dataset" << std::endl;
+        align_mat = align_mat * velo_2_lgrey_kitti;
+    }
+
+    // ================================Start LeGO-LOAM================================
     if (!legoloam.Init()) {
         std::cerr << "Failed to initialize slam system." << std::endl;
         return false;
@@ -107,7 +143,8 @@ bool sb_update_frame(SLAMBenchLibraryHelper *slam_settings , slambench::io::SLAM
 
         last_frame_timestamp = s->Timestamp;
         current_timestamp = static_cast<double>(s->Timestamp.S) + static_cast<double>(s->Timestamp.Ns) / 1e9;
-        legoloam.IP_->laserCloudInMetadata.timestamp = current_timestamp;
+        legoloam.IP_->laserCloudInMetadata.timestamp = frame_id;
+        frame_id++;
         
         float *fdata = static_cast<float*>(s->GetData());
         int count = s->GetSize()/(4 * sizeof(float));
@@ -129,22 +166,6 @@ bool sb_update_frame(SLAMBenchLibraryHelper *slam_settings , slambench::io::SLAM
 
         return true;
 	}
-
-    /*
-    if (s->FrameSensor == lidar_sensor) {
-        std::stringstream tmp_filename;
-        tmp_filename << std::setw(10) << std::setfill('0') << frame_id;
-        std::string lidar_file_pcd = tmp_filename.str() + ".pcd";
-        lidar_file_pcd = dirname + lidar_file_pcd;
-        std::cout << lidar_file_pcd << std::endl;
-        frame_id++;
-
-        pcl::io::loadPCDFile(lidar_file_pcd, *(legoloam.IP_->laserCloudIn));
-
-        legoloam.IP_->laserCloudInMetadata.timestamp = frame_id;
-
-        return true;
-    } */
 	
 	return false;
 }
@@ -185,7 +206,25 @@ bool sb_update_outputs(SLAMBenchLibraryHelper *lib, const slambench::TimeStamp *
 
     if (pose_output->IsActive()) {
         std::lock_guard<FastLock> lock (lib->GetOutputManager().GetLock());
-		pose_output->AddPoint(ts, new slambench::values::PoseValue(align_mat * velo_2_lgrey * pose));
+		pose_output->AddPoint(ts, new slambench::values::PoseValue(align_mat * pose));
+    }
+    
+    if (pointcloud_output->IsActive() && show_point_cloud) {
+
+        pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_out_trans(new pcl::PointCloud<pcl::PointXYZI>);
+
+        pcl::transformPointCloud(*(legoloam.MO_->cloudOutMetadata.cloud), *cloud_out_trans, align_mat);
+
+        auto slambench_point_cloud = new slambench::values::PointCloudValue();
+        int count = 0;
+        for(const auto &p : *cloud_out_trans) {
+            if (count % 10 == 0) slambench_point_cloud->AddPoint(slambench::values::Point3DF(p.x, p.y, p.z));
+            count++;
+        }
+
+        // Take lock only after generating the map
+        std::lock_guard<FastLock> lock (lib->GetOutputManager().GetLock());
+        pointcloud_output->AddPoint(ts, slambench_point_cloud);
     }
 
     return true;

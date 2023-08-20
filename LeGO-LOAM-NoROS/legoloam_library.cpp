@@ -34,6 +34,7 @@ const std::string default_yaml_path = "/deps/legoloam/configs/configs.yaml";
 // Parameters
 std::string yaml_path;
 bool show_point_cloud;
+int point_cloud_ratio;
 // extern parameters in utility.h
 int N_SCAN;
 int Horizon_SCAN;
@@ -112,6 +113,7 @@ bool sb_init_slam_system(SLAMBenchLibraryHelper *slam_settings) {
     dataset_name = config["dataset_name"].as<std::string>();
 
     show_point_cloud = config["show_point_cloud"].as<bool>();
+    point_cloud_ratio = config["point_cloud_ratio"].as<int>();
     
     std::cout << "N_SCAN: " << N_SCAN << std::endl;
     std::cout << "Horizon_SCAN: " << Horizon_SCAN << std::endl;
@@ -218,7 +220,7 @@ bool sb_update_outputs(SLAMBenchLibraryHelper *lib, const slambench::TimeStamp *
         auto slambench_point_cloud = new slambench::values::PointCloudValue();
         int count = 0;
         for(const auto &p : *cloud_out_trans) {
-            if (count % 10 == 0) slambench_point_cloud->AddPoint(slambench::values::Point3DF(p.x, p.y, p.z));
+            if (count % point_cloud_ratio == 0) slambench_point_cloud->AddPoint(slambench::values::Point3DF(p.x, p.y, p.z));
             count++;
         }
 

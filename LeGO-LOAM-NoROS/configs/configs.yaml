@@ -7,7 +7,7 @@ ang_bottom: 24.9
 groundScanInd: 50
 dataset_name: KITTI
 show_point_cloud: true
-point_cloud_ratio: 5 # number of points displayed = total points / point_cloud_ratio
+point_cloud_ratio: 20 # number of points displayed = total points / point_cloud_ratio
 
 # VLP16
 # N_SCAN: 16

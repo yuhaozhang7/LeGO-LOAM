@@ -29,7 +29,7 @@
 #include "include/legoloam.h"
 
 const std::string default_yaml_path = "/deps/legoloam/configs/configs.yaml";
-// const std::string test_yaml_path = "/home/yuhao/legoloam/LeGO-LOAM-NoROS/configs/configs.yaml"
+// const std::string test_yaml_path = "/home/yuhao/legoloam/LeGO-LOAM-NoROS/configs/configs.yaml";
 
 // Parameters
 std::string yaml_path;
@@ -62,9 +62,9 @@ slambench::outputs::Output *pointcloud_output;
 static lego_loam::LeGOLOAM legoloam;
 // contains rotation only
 Eigen::Matrix4f velo_2_lgrey_kitti = (Eigen::Matrix4f() << 9.999728e-01f,  7.027479e-03f, -2.255075e-03f,  0.000000e+00f,
-                                                    -7.027555e-03f,  9.999753e-01f, -2.599616e-05f,  0.000000e+00f,
-                                                     2.254837e-03f,  4.184312e-05f,  9.999975e-01f,  0.000000e+00f,
-                                                     0.000000e+00f,  0.000000e+00f,  0.000000e+00f,  1.000000e+00f).finished();
+                                                          -7.027555e-03f,  9.999753e-01f, -2.599616e-05f,  0.000000e+00f,
+                                                           2.254837e-03f,  4.184312e-05f,  9.999975e-01f,  0.000000e+00f,
+                                                           0.000000e+00f,  0.000000e+00f,  0.000000e+00f,  1.000000e+00f).finished();
 
 Eigen::Matrix4f align_mat = (Eigen::Matrix4f() << -1.0,  0.0, 0.0, 0.0,
                                                    0.0, -1.0, 0.0, 0.0,
@@ -100,7 +100,7 @@ bool sb_init_slam_system(SLAMBenchLibraryHelper *slam_settings) {
     }
 
     // ================================Read YAML================================
-    YAML::Node config = YAML::LoadFile("/home/yuhao/legoloam/LeGO-LOAM-NoROS/configs/configs.yaml");
+    YAML::Node config = YAML::LoadFile(default_yaml_path);
 
     N_SCAN = config["N_SCAN"].as<int>();
     Horizon_SCAN = config["Horizon_SCAN"].as<int>();
@@ -163,8 +163,8 @@ bool sb_update_frame(SLAMBenchLibraryHelper *slam_settings , slambench::io::SLAM
             point.intensity = intensity;
             legoloam.IP_->laserCloudIn->points.push_back(point);
         }
-        // legoloam.IP_->laserCloudIn->width = legoloam.IP_->laserCloudIn->points.size();
-        // legoloam.IP_->laserCloudIn->height = 1;
+        legoloam.IP_->laserCloudIn->width = legoloam.IP_->laserCloudIn->points.size();
+        legoloam.IP_->laserCloudIn->height = 1;
 
         return true;
 	}

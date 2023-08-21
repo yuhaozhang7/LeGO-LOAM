@@ -8,6 +8,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -O3")
 # find_package(OpenCV REQUIRED QUIET)
 # find_package(yaml-cpp REQUIRED)
 
+file(GLOB FLANN_LIBRARIES "${FLANN_LIBRARY_DIR}/libflann*.*")
 file(GLOB PCL_LIBRARIES "${PCL_LIBRARY_DIR}/libpcl_*.so*")
 file(GLOB OpenCV_LIBRARIES "${OpenCV_LIBRARY_DIR}/libopencv_*.so*")
 file(GLOB GTSAM_LIBRARIES "${GTSAM_LIBRARY_DIR}/lib*.*")
@@ -16,6 +17,7 @@ file(GLOB YAML_CPP_LIBRARIES "${YAML_LIBRARY_DIR}/libyaml-cpp.a")
 include_directories(
 	include
     ${EIGEN3_INCLUDE_DIR}
+	${FLANN_INCLUDE_DIR}
 	${PCL_INCLUDE_DIR}
 	${OpenCV_INCLUDE_DIR}
 	${GTSAM_INCLUDE_DIR}
@@ -42,6 +44,7 @@ install(TARGETS ${PROJECT_NAME}-original  DESTINATION  lib/)
 
 target_link_libraries(${PROJECT_NAME}-original
 	${PROJECT_NAME}
+	${FLANN_LIBRARIES}
 	${PCL_LIBRARIES}
     ${OpenCV_LIBRARIES}
 	${YAML_CPP_LIBRARIES}

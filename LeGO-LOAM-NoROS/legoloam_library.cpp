@@ -49,10 +49,9 @@ std::string dataset_name;
 // Sensors
 slambench::io::LidarSensor *lidar_sensor;
 
-size_t frame_id = 0;
-
 slambench::TimeStamp last_frame_timestamp;
 double current_timestamp;
+double fake_timestamp = 1000.0;
 
 // Outputs
 slambench::outputs::Output *pose_output;
@@ -145,8 +144,9 @@ bool sb_update_frame(SLAMBenchLibraryHelper *slam_settings , slambench::io::SLAM
 
         last_frame_timestamp = s->Timestamp;
         current_timestamp = static_cast<double>(s->Timestamp.S) + static_cast<double>(s->Timestamp.Ns) / 1e9;
-        legoloam.IP_->laserCloudInMetadata.timestamp = frame_id;
-        frame_id++;
+        // LeGO-LOAM doesn't fit KITTI's timestamp.
+        fake_timestamp = fake_timestamp + 0.2;
+        legoloam.IP_->laserCloudInMetadata.timestamp = fake_timestamp;
         
         float *fdata = static_cast<float*>(s->GetData());
         int count = s->GetSize()/(4 * sizeof(float));

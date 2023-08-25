@@ -29,7 +29,6 @@
 #include "include/legoloam.h"
 
 const std::string default_yaml_path = "/deps/legoloam/configs/configs.yaml";
-// const std::string test_yaml_path = "/home/yuhao/legoloam/LeGO-LOAM-NoROS/configs/configs.yaml";
 
 // Parameters
 std::string yaml_path;
@@ -74,7 +73,7 @@ Eigen::Matrix4f pose;
 
 bool sb_new_slam_configuration(SLAMBenchLibraryHelper * slam_settings) {
 
-    slam_settings->addParameter(TypedParameter<std::string>("", "configuration", "path to configuration YAML file", &yaml_path, &default_yaml_path));
+    slam_settings->addParameter(TypedParameter<std::string>("configs", "configuration", "path to configuration YAML file", &yaml_path, &default_yaml_path));
 
     return true;
 }
@@ -99,7 +98,7 @@ bool sb_init_slam_system(SLAMBenchLibraryHelper *slam_settings) {
     }
 
     // ================================Read YAML================================
-    YAML::Node config = YAML::LoadFile(default_yaml_path);
+    YAML::Node config = YAML::LoadFile(yaml_path);
 
     N_SCAN = config["N_SCAN"].as<int>();
     Horizon_SCAN = config["Horizon_SCAN"].as<int>();

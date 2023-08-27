@@ -130,7 +130,7 @@ public:
     float imuAngularRotationY[imuQueLength];
     float imuAngularRotationZ[imuQueLength];
 
-    int skipFrameNum;
+    // int skipFrameNum; Move it to utility.h
     bool systemInitedLM;
 
     int laserCloudCornerLastNum;

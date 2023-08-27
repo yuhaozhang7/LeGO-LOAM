@@ -144,7 +144,7 @@ namespace lego_loam{
         }
 
 
-        skipFrameNum = 1;
+        // skipFrameNum = 1;
 
         for (int i = 0; i < 6; ++i){
             transformCur[i] = 0;

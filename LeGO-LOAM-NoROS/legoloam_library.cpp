@@ -43,6 +43,8 @@ float ang_bottom;
 int groundScanInd;
 float segmentAlphaX;
 float segmentAlphaY;
+int skipFrameNum;
+double mappingProcessInterval;
 std::string dataset_name;
 
 // Sensors
@@ -108,6 +110,8 @@ bool sb_init_slam_system(SLAMBenchLibraryHelper *slam_settings) {
     groundScanInd = config["groundScanInd"].as<int>();
     segmentAlphaX = ang_res_x / 180.0 * M_PI;
     segmentAlphaY = ang_res_y / 180.0 * M_PI;
+    skipFrameNum = config["skip_frame_num"].as<int>();
+    mappingProcessInterval = config["mapping_process_interval"].as<double>();
     dataset_name = config["dataset_name"].as<std::string>();
 
     show_point_cloud = config["show_point_cloud"].as<bool>();
@@ -119,6 +123,8 @@ bool sb_init_slam_system(SLAMBenchLibraryHelper *slam_settings) {
     std::cout << "ang_res_y: " << ang_res_y << std::endl;
     std::cout << "ang_bottom: " << ang_bottom << std::endl;
     std::cout << "groundScanInd: " << groundScanInd << std::endl;
+    std::cout << "skipFrameNum: " << skipFrameNum << std::endl;
+    std::cout << "mappingProcessInterval: " << mappingProcessInterval << std::endl;
     std::cout << "dataset_name: " << dataset_name << std::endl;
 
     if (dataset_name == "KITTI") {
@@ -144,8 +150,8 @@ bool sb_update_frame(SLAMBenchLibraryHelper *slam_settings , slambench::io::SLAM
         last_frame_timestamp = s->Timestamp;
         current_timestamp = static_cast<double>(s->Timestamp.S) + static_cast<double>(s->Timestamp.Ns) / 1e9;
         // LeGO-LOAM doesn't fit KITTI's timestamp.
-        fake_timestamp = fake_timestamp + 0.2;
-        legoloam.IP_->laserCloudInMetadata.timestamp = fake_timestamp;
+        // fake_timestamp = fake_timestamp + 0.2;
+        legoloam.IP_->laserCloudInMetadata.timestamp = current_timestamp;
         
         float *fdata = static_cast<float*>(s->GetData());
         int count = s->GetSize()/(4 * sizeof(float));

@@ -70,6 +70,9 @@ extern float ang_bottom;
 extern int groundScanInd;
 extern float segmentAlphaX;
 extern float segmentAlphaY;
+
+extern int skipFrameNum;
+extern double mappingProcessInterval;
 extern string dataset_name;
 
 // VLP-16
@@ -123,7 +126,7 @@ extern string dataset_name;
 // extern const int groundScanInd = 15;
 
 const bool loopClosureEnableFlag = false;
-const double mappingProcessInterval = 0.3;
+// const double mappingProcessInterval = 0.3;
 
 const float scanPeriod = 0.1;
 const int systemDelay = 0;

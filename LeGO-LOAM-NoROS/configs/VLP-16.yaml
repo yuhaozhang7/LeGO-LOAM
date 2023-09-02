@@ -1,4 +1,4 @@
-# VLP16
+# VLP-16
 N_SCAN: 16
 Horizon_SCAN: 1800
 ang_res_x: 0.2

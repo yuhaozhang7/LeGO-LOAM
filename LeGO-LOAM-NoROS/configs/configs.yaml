@@ -1,4 +1,4 @@
-# KITTI
+# HDL-64E
 N_SCAN: 64
 Horizon_SCAN: 1800
 ang_res_x: 0.2
@@ -8,7 +8,7 @@ groundScanInd: 50
 skip_frame_num: 1     # Check FeatureAssociation::publishCloudsLast()
 mapping_process_interval: 0.1     # Check MapOptimization::process()
 dataset_name: KITTI
-show_point_cloud: false
+show_point_cloud: true
 point_cloud_ratio: 20 # number of points displayed = total points / point_cloud_ratio
 
 # VLP16
@@ -20,6 +20,19 @@ point_cloud_ratio: 20 # number of points displayed = total points / point_cloud_
 # groundScanInd: 7
 # skip_frame_num: 1
 # mapping_process_interval: 0.1
-# dataset_name: VLP16
+# dataset_name: nsh_indoor_and_outdoor
 # show_point_cloud: true
 # point_cloud_ratio: 20
+
+# OS1-64
+# N_SCAN: 64
+# Horizon_SCAN: 1024
+# ang_res_x: 0.3516
+# ang_res_y: 0.527
+# ang_bottom: 16.7
+# groundScanInd: 15
+# skip_frame_num: 1
+# mapping_process_interval: 0.01
+# dataset_name: NewerCollege
+# show_point_cloud: true
+#point_cloud_ratio: 1

@@ -126,6 +126,8 @@ bool sb_init_slam_system(SLAMBenchLibraryHelper *slam_settings) {
     std::cout << "skipFrameNum: " << skipFrameNum << std::endl;
     std::cout << "mappingProcessInterval: " << mappingProcessInterval << std::endl;
     std::cout << "dataset_name: " << dataset_name << std::endl;
+    std::cout << "show_point_cloud: " << show_point_cloud << std::endl;
+    std::cout << "point_cloud_ratio: " << point_cloud_ratio << std::endl;
 
     if (dataset_name == "KITTI") {
         std::cout << "Use KITTI dataset" << std::endl;

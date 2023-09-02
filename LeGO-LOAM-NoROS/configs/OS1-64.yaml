@@ -1,0 +1,12 @@
+# OS1-64
+N_SCAN: 64
+Horizon_SCAN: 1024
+ang_res_x: 0.3516
+ang_res_y: 0.527
+ang_bottom: 16.7
+groundScanInd: 15
+skip_frame_num: 1
+mapping_process_interval: 0.1
+dataset_name: NewerCollege
+show_point_cloud: true
+point_cloud_ratio: 1

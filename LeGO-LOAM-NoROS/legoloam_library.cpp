@@ -151,25 +151,20 @@ bool sb_update_frame(SLAMBenchLibraryHelper *slam_settings , slambench::io::SLAM
 
         last_frame_timestamp = s->Timestamp;
         current_timestamp = static_cast<double>(s->Timestamp.S) + static_cast<double>(s->Timestamp.Ns) / 1e9;
-        // LeGO-LOAM doesn't fit KITTI's timestamp.
-        // fake_timestamp = fake_timestamp + 0.2;
         legoloam.IP_->laserCloudInMetadata.timestamp = current_timestamp;
         
-        float *fdata = static_cast<float*>(s->GetData());
-        int count = s->GetSize()/(4 * sizeof(float));
+        void* rawData = s->GetData();
+        size_t dataSize = s->GetVariableSize(); // Assuming you have such a method. If not, you'd need another way to know the size.
 
-        for(int i = 0; i < count; ++i) {
-            float x = fdata[i*4];
-            float y = fdata[i*4+1];
-            float z = fdata[i*4+2];
-            float intensity = 0.0;
-            pcl::PointXYZI point;
-            point.x = x;
-            point.y = y;
-            point.z = z;
-            point.intensity = intensity;
+        char* byteData = reinterpret_cast<char*>(rawData);
+
+        pcl::PointCloud<pcl::PointXYZI>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZI>());
+
+        for (size_t i = 0; i < dataSize; i += sizeof(pcl::PointXYZI)) {
+            pcl::PointXYZI point = *reinterpret_cast<pcl::PointXYZI*>(byteData + i);
             legoloam.IP_->laserCloudIn->points.push_back(point);
         }
+
         legoloam.IP_->laserCloudIn->width = legoloam.IP_->laserCloudIn->points.size();
         legoloam.IP_->laserCloudIn->height = 1;
 

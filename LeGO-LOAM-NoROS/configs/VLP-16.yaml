@@ -5,8 +5,8 @@ ang_res_x: 0.2
 ang_res_y: 2.0
 ang_bottom: 15.1
 groundScanInd: 7
-skip_frame_num: 0
-mapping_process_interval: 0.01
-dataset_name: nsh_indoor_and_outdoor
+skip_frame_num: 1
+mapping_process_interval: 0.3
+dataset_name: DARPA
 show_point_cloud: false
 point_cloud_ratio: 20

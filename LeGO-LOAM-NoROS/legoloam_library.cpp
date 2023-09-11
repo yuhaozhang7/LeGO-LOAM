@@ -61,11 +61,6 @@ slambench::outputs::Output *pointcloud_output;
 // System
 static lego_loam::LeGOLOAM legoloam;
 // contains rotation only
-Eigen::Matrix4f velo_2_lgrey_kitti = (Eigen::Matrix4f() << 9.999728e-01f,  7.027479e-03f, -2.255075e-03f,  0.000000e+00f,
-                                                          -7.027555e-03f,  9.999753e-01f, -2.599616e-05f,  0.000000e+00f,
-                                                           2.254837e-03f,  4.184312e-05f,  9.999975e-01f,  0.000000e+00f,
-                                                           0.000000e+00f,  0.000000e+00f,  0.000000e+00f,  1.000000e+00f).finished();
-
 Eigen::Matrix4f align_mat = (Eigen::Matrix4f() << -1.0,  0.0, 0.0, 0.0,
                                                    0.0, -1.0, 0.0, 0.0,
                                                    0.0,  0.0, 1.0, 0.0,
@@ -129,11 +124,6 @@ bool sb_init_slam_system(SLAMBenchLibraryHelper *slam_settings) {
     std::cout << "show_point_cloud: " << show_point_cloud << std::endl;
     std::cout << "point_cloud_ratio: " << point_cloud_ratio << std::endl;
 
-    if (dataset_name == "KITTI") {
-        std::cout << "Use KITTI dataset" << std::endl;
-        align_mat = align_mat * velo_2_lgrey_kitti;
-    }
-
     // ================================Start LeGO-LOAM================================
     if (!legoloam.Init()) {
         std::cerr << "Failed to initialize slam system." << std::endl;
@@ -153,6 +143,28 @@ bool sb_update_frame(SLAMBenchLibraryHelper *slam_settings , slambench::io::SLAM
         current_timestamp = static_cast<double>(s->Timestamp.S) + static_cast<double>(s->Timestamp.Ns) / 1e9;
         legoloam.IP_->laserCloudInMetadata.timestamp = current_timestamp;
         
+        if (dataset_name == "KITTI") {
+            float *fdata = static_cast<float*>(s->GetData());
+            int count = s->GetSize()/(4 * sizeof(float));
+
+            for(int i = 0; i < count; ++i) {
+                float x = fdata[i*4];
+                float y = fdata[i*4+1];
+                float z = fdata[i*4+2];
+                float intensity = 0.0;
+                pcl::PointXYZI point;
+                point.x = x;
+                point.y = y;
+                point.z = z;
+                point.intensity = intensity;
+                legoloam.IP_->laserCloudIn->points.push_back(point);
+            }
+            legoloam.IP_->laserCloudIn->width = legoloam.IP_->laserCloudIn->points.size();
+            legoloam.IP_->laserCloudIn->height = 1;
+            
+            return true;
+        }
+
         void* rawData = s->GetData();
         size_t dataSize = s->GetVariableSize(); // Assuming you have such a method. If not, you'd need another way to know the size.
 
@@ -162,6 +174,7 @@ bool sb_update_frame(SLAMBenchLibraryHelper *slam_settings , slambench::io::SLAM
 
         for (size_t i = 0; i < dataSize; i += sizeof(pcl::PointXYZI)) {
             pcl::PointXYZI point = *reinterpret_cast<pcl::PointXYZI*>(byteData + i);
+            point.intensity = 0.0;
             legoloam.IP_->laserCloudIn->points.push_back(point);
         }
 

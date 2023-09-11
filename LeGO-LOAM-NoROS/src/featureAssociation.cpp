@@ -845,7 +845,6 @@ namespace lego_loam{
     void FeatureAssociation::TransformToEnd(PointType const * const pi, PointType * const po)
     {
         float s = 10 * (pi->intensity - int(pi->intensity));
-        if (dataset_name == "KITTI") s = 1;
 
         float rx = s * transformCur[0];
         float ry = s * transformCur[1];
@@ -1762,12 +1761,14 @@ namespace lego_loam{
 
         int cornerPointsLessSharpNum = cornerPointsLessSharp->points.size();
         for (int i = 0; i < cornerPointsLessSharpNum; i++) {
+            if (dataset_name == "KITTI") break;
             TransformToEnd(&cornerPointsLessSharp->points[i], &cornerPointsLessSharp->points[i]);
         }
 
 
         int surfPointsLessFlatNum = surfPointsLessFlat->points.size();
         for (int i = 0; i < surfPointsLessFlatNum; i++) {
+            if (dataset_name == "KITTI") break;
             TransformToEnd(&surfPointsLessFlat->points[i], &surfPointsLessFlat->points[i]);
         }
 

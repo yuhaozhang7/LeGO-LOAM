@@ -54,6 +54,8 @@ slambench::TimeStamp last_frame_timestamp;
 double current_timestamp;
 double fake_timestamp = 1000.0;
 
+int frame_count = 0;
+
 // Outputs
 slambench::outputs::Output *pose_output;
 slambench::outputs::Output *pointcloud_output;
@@ -170,6 +172,7 @@ bool sb_process_once(SLAMBenchLibraryHelper *slam_settings) {
     
     legoloam.Run();
 
+    /*
     if (legoloam.MO_->cloudKeyPoses6D->points.size() == 0) {
         pose = Eigen::Matrix4f::Identity();
         return true;
@@ -189,7 +192,27 @@ bool sb_process_once(SLAMBenchLibraryHelper *slam_settings) {
     pose = Eigen::Matrix4f::Identity();
     pose.block<3, 3>(0, 0) = rotationMatrix;
     pose.block<3, 1>(0, 3) = translation;
+    */
 
+    if (frame_count == 0) {
+        pose = Eigen::Matrix4f::Identity();
+        frame_count++;
+        return true;
+    }
+
+    Odometry final_odometry = legoloam.TF_->laserOdometry2;
+
+    Eigen::Quaternionf quat(final_odometry.orientationW, final_odometry.orientationX, final_odometry.orientationY, final_odometry.orientationZ);
+    Eigen::Matrix3f rotationMatrix = quat.toRotationMatrix();
+
+    pose = Eigen::Matrix4f::Identity();
+
+    pose.block<3, 3>(0, 0) = rotationMatrix;
+    pose(0, 3) = final_odometry.positionX;
+    pose(1, 3) = final_odometry.positionY;
+    pose(2, 3) = final_odometry.positionZ;
+
+    frame_count++;
     return true;
 }
 

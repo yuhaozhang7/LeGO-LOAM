@@ -31,10 +31,12 @@ add_library(${PROJECT_NAME} SHARED
 ./include/imageProjection.h
 ./include/featureAssociation.h
 ./include/mapOptimization.h
+./include/transformFusion.h
 ./include/legoloam.h
 ./src/imageProjection.cpp
 ./src/featureAssociation.cpp
 ./src/mapOptimization.cpp
+./src/transformFusion.cpp
 ./src/legoloam.cpp)
 
 

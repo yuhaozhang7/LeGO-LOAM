@@ -15,21 +15,27 @@ bool LeGOLOAM::Init() {
 
     // Create a thread for MO_ processing
     std::thread moThread([this] {
-        while (true) { // Replace with a proper condition for thread termination
-            std::unique_lock<std::mutex> lock(moMutex);
-            moCondition.wait(lock, [this]{ return moUpdateFlag; });
+        while (true) {
 
-            MO_->adjustLaserInput(FAoutlierCloudMetadata, FAlaserCloudCornerLastMetadata, FAlaserCloudSurfLastMetadata, FAlaserOdometry);
-            MO_->process();
+            bool inputRecived = false;
 
-            // Store the latest output of MO_ in a buffer
-            std::lock_guard<std::mutex> resultLock(resultMutex);
-            latestOdomAftMapped = MO_->odomAftMapped;
-            moUpdateFlag = false;
-            
-            isNewOdomAvailable = true;
-            processCountForCurrentOdom = 0;
-            newOdomAvailable.notify_one();
+            mutex.lock();
+            if (FAoutlierCloudMetadata.frame_id == "/camera") {
+                MO_->adjustLaserInput(FAoutlierCloudMetadata, FAlaserCloudCornerLastMetadata, FAlaserCloudSurfLastMetadata, FAlaserOdometry);
+                inputRecived = true;
+            }
+            mutex.unlock();
+
+            if (inputRecived) {
+                MO_->process();
+
+                mutex.lock();
+                latestOdomAftMapped = MO_->odomAftMapped;
+                isOdomAftMapAvailable = true;
+                processCountFromLastOdom = 0;
+                mutex.unlock();
+            }
+
         }
     });
     moThread.detach();
@@ -40,15 +46,26 @@ bool LeGOLOAM::Init() {
 
 void LeGOLOAM::Run() {
     
+    std::cout << "Prcoess Frame " << process_count + 1 << std::endl;
+
     IP_->process();
 
     FA_->adjustLaserInput(IP_->segMsg, IP_->segmentedCloudMetadata, IP_->outlierCloudMetadata);
     FA_->process();
 
-    // MO_->adjustLaserInput(FA_->outlierCloudMetadata, FA_->laserCloudCornerLastMetadata, FA_->laserCloudSurfLastMetadata, FA_->laserOdometry);
-    // MO_->process();
-
+    /*
     if (process_count % 5 == 0) {
+        MO_->adjustLaserInput(FA_->outlierCloudMetadata, FA_->laserCloudCornerLastMetadata, FA_->laserCloudSurfLastMetadata, FA_->laserOdometry);
+        MO_->process();
+    }
+
+    TF_->odomAftMappedHandler(MO_->odomAftMapped);
+    TF_->laserOdometryHandler(FA_->laserOdometry);
+    */
+    
+    if (process_count % 1 == 0) {
+        
+        mutex.lock();
 
         *(FAoutlierCloudMetadata.cloud) = *(FA_->outlierCloud);
         FAoutlierCloudMetadata.timestamp = FA_->timeScanCur;
@@ -64,39 +81,22 @@ void LeGOLOAM::Run() {
 
         FAlaserOdometry = FA_->laserOdometry;
 
-        {
-            std::lock_guard<std::mutex> lock(moMutex);
-            moUpdateFlag = true;
-            moCondition.notify_one();
-        }
+        mutex.unlock();
+
     }
 
-    {
-        std::unique_lock<std::mutex> lock(resultMutex);
-        while (!isNewOdomAvailable && process_count != 0) {
-            newOdomAvailable.wait(lock); // Wait until a new odom is available
-        }
-
-        if (process_count != 0) {
-            TF_->odomAftMappedHandler(latestOdomAftMapped);
-            TF_->laserOdometryHandler(FA_->laserOdometry);
-            processCountForCurrentOdom++;
-
-            if (processCountForCurrentOdom >= 5) {
-                isNewOdomAvailable = false; // Set to false to wait for new data
-            }
-        }
+    while (true) {
+        mutex.lock();
+        if (processCountFromLastOdom < 2 && isOdomAftMapAvailable) break;
+        mutex.unlock();
     }
+    mutex.unlock();
 
-    /*
-    {
-        // Use the latest output of MO_
-        std::lock_guard<std::mutex> lock(resultMutex);
-        if (process_count != 0) {
-            TF_->odomAftMappedHandler(latestOdomAftMapped);
-            TF_->laserOdometryHandler(FA_->laserOdometry);
-        }
-    }*/
+    mutex.lock();
+    TF_->odomAftMappedHandler(latestOdomAftMapped);
+    TF_->laserOdometryHandler(FA_->laserOdometry);
+    processCountFromLastOdom++;
+    mutex.unlock();
 
     IP_->resetParameters();
 

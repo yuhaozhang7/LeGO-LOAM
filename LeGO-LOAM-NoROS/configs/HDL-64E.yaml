@@ -6,7 +6,7 @@ ang_res_y: 0.427
 ang_bottom: 24.9
 groundScanInd: 50
 skip_frame_num: 0     # Check FeatureAssociation::publishCloudsLast()
-mapping_process_interval: 0.1     # Check MapOptimization::process()
+mapping_process_interval: 0.01     # Check MapOptimization::process()
 dataset_name: KITTI
-show_point_cloud: false
+show_point_cloud: true
 point_cloud_ratio: 20 # number of points displayed = total points / point_cloud_ratio

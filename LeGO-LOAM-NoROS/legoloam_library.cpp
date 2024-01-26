@@ -232,6 +232,7 @@ bool sb_update_outputs(SLAMBenchLibraryHelper *lib, const slambench::TimeStamp *
         pcl::PointCloud<pcl::PointXYZI>::Ptr cloud_out_trans(new pcl::PointCloud<pcl::PointXYZI>);
 
         pcl::transformPointCloud(*(legoloam.MO_->cloudOutMetadata.cloud), *cloud_out_trans, align_mat);
+        // pcl::transformPointCloud(*(legoloam.FA_->laserCloudCornerLastMetadata.cloud), *cloud_out_trans, align_mat);
 
         auto slambench_point_cloud = new slambench::values::PointCloudValue();
         int count = 0;

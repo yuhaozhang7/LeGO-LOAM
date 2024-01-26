@@ -31,16 +31,13 @@ class LeGOLOAM {
 
     std::unique_ptr<TransformFusion> TF_{nullptr};
 
-    std::mutex moMutex;
-    std::mutex resultMutex;
-    std::condition_variable moCondition;
-    std::condition_variable newOdomAvailable;
+    std::mutex mutex;
 
+    bool isOdomAftMapAvailable = false;
     bool isNewOdomAvailable = false;
-    bool moUpdateFlag = false;
 
     int process_count = 0;
-    int processCountForCurrentOdom;
+    int processCountFromLastOdom = 0;
 
     PointCloudWithMetadata FAoutlierCloudMetadata;
     PointCloudWithMetadata FAlaserCloudCornerLastMetadata;

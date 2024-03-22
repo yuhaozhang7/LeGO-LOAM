@@ -7,6 +7,7 @@ ang_bottom: 15.1
 groundScanInd: 7
 skip_frame_num: 0
 mapping_process_interval: 0.01
+odo_2_map: 1
 dataset_name: DARPA
 show_point_cloud: true
 point_cloud_ratio: 20

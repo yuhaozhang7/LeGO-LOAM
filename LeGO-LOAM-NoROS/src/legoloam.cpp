@@ -87,7 +87,7 @@ void LeGOLOAM::Run() {
 
     while (true) {
         mutex.lock();
-        if (processCountFromLastOdom < 2 && isOdomAftMapAvailable) break;
+        if (processCountFromLastOdom < odo2Map && isOdomAftMapAvailable) break;
         mutex.unlock();
     }
     mutex.unlock();

@@ -72,6 +72,7 @@ extern float segmentAlphaX;
 extern float segmentAlphaY;
 
 extern int skipFrameNum;
+extern int odo2Map;
 extern double mappingProcessInterval;
 extern string dataset_name;
 
